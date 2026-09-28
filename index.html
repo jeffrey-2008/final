@@ -1,0 +1,316 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campus Toolkit — Free Class Locator + Attendance Predictor</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f7fb;--card:#fff;--tx:#1b1f2a;--mut:#667085;--bd:#e3e6ee;--ok:#0b7a43;--okb:#e6f6ee;--no:#b42318;--nob:#fdecea;--ac:#3b5bdb}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141a;--card:#1b1e27;--tx:#eceef4;--mut:#98a2b3;--bd:#2b2f3b;--ok:#4ade80;--okb:#12301f;--no:#f87171;--nob:#3a1a1a;--ac:#8ea2ff}}
+:root[data-theme="dark"]{--bg:#12141a;--card:#1b1e27;--tx:#eceef4;--mut:#98a2b3;--bd:#2b2f3b;--ok:#4ade80;--okb:#12301f;--no:#f87171;--nob:#3a1a1a;--ac:#8ea2ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:18px 14px 40px}
+h1{font-size:22px;margin:0 0 2px}h2{font-size:16px;margin:22px 0 8px}
+.sub{color:var(--mut);margin:0 0 14px;font-size:13px}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}
+.ai{display:flex;gap:8px}
+input,select,button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
+.ai input{flex:1;min-width:0}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac);cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12px;padding:4px 9px;border-radius:99px;border:1px solid var(--bd);color:var(--mut);cursor:pointer;background:transparent}
+.interp{margin-top:8px;font-size:13px;color:var(--mut)}.interp b{color:var(--tx)}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.filters label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.room{border:1px solid var(--bd);border-radius:10px;padding:10px;background:var(--card)}
+.room.free{border-left:4px solid var(--ok)}.room.busy{border-left:4px solid var(--no);opacity:.85}
+.room .n{font-weight:650}.room .m{font-size:12px;color:var(--mut);margin-top:2px}
+.tag{display:inline-block;font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;background:var(--bd);color:var(--mut);font-weight:500}
+.st{font-size:13px;margin-top:6px}.free .st{color:var(--ok)}.busy .st{color:var(--no)}
+.empty{color:var(--mut);padding:8px 0}
+.note{font-size:12px;color:var(--mut);margin-top:24px}
+@media(max-width:520px){.ai{flex-direction:column}}
+
+.stage{height:430px;perspective:1500px;display:flex;justify-content:center;align-items:center;overflow:hidden}
+.bld{position:relative;width:min(470px,92%);height:100px;transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(-28deg);transition:transform .5s}
+.slab{position:absolute;inset:0;transform:translateZ(calc(var(--z)*52px));display:flex;gap:6px;padding:6px 6px 6px 30px;border:1px solid var(--bd);background:var(--card);border-radius:6px;box-shadow:0 6px 14px rgba(0,0,0,.12)}
+.slab .fl{position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--mut);font-weight:700}
+.bld.flat{transform:none;height:auto;display:flex;flex-direction:column;gap:6px;width:100%}
+.bld.flat .slab{position:static;transform:none;min-height:66px;box-shadow:none}
+.stage.flatst{height:auto;perspective:none}
+.t{flex:1;min-width:0;border:1.5px solid var(--ok);background:var(--okb);color:var(--ok);border-radius:6px;font-size:11px;line-height:1.25;padding:4px;cursor:pointer;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.t b{font-size:12px;color:var(--tx)}
+.t.busy{border-color:var(--no);background:var(--nob);color:var(--no)}
+.t.soon{border-color:#d98a00;background:rgba(245,158,11,.22);color:#b06a00}
+.t.mine{box-shadow:0 0 0 3px var(--ac)}.t.sel{outline:2px solid var(--tx);transform:translateZ(14px)}
+.t.dim{opacity:.3}.t:hover{filter:brightness(1.1)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mut);align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;border:1.5px solid}
+.mapbar{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.cd{font:700 34px/1.1 ui-monospace,SFMono-Regular,Menlo,monospace;margin:8px 0 2px;font-variant-numeric:tabular-nums}
+.lbl{font-size:13px;color:var(--mut)}
+.wa{display:inline-block;margin-top:10px;background:#25d366;color:#053b1a;font-weight:650;text-decoration:none;padding:9px 14px;border-radius:8px}
+.room{cursor:pointer}
+
+
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--bg);border-bottom:1px solid var(--bd);display:flex;gap:6px;padding:8px 14px;justify-content:center}
+.tabs button{cursor:pointer;font-weight:600;padding:8px 14px}
+.tabs button[aria-selected="true"]{background:var(--ac);color:#fff;border-color:var(--ac)}
+section[hidden]{display:none}
+
+#pred .f{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}#pred .f label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:3px}#pred input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;width:100%}#pred .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}#pred .k{border:1px solid var(--bd);border-radius:10px;padding:10px;background:var(--card)}#pred .k.ok{border-left:4px solid var(--ok)}#pred .k.no{border-left:4px solid var(--no)}#pred .k .n{font-size:24px;font-weight:650}#pred .k .m{font-size:12px;color:var(--mut)}#pred .ok .n{color:var(--ok)}#pred .no .n{color:var(--no)}#pred .adv{margin:0;padding-left:18px}#pred .adv li{margin:4px 0}#pred svg{width:100%;height:auto;display:block}#pred .ax{stroke:var(--bd)}#pred .t{fill:var(--mut);font-size:11px}#pred .ln{fill:none;stroke:var(--ac);stroke-width:2.5}#pred .l75{stroke:var(--no);stroke-dasharray:4 3}#pred .l90{stroke:var(--ok);stroke-dasharray:4 3}#pred .dot{fill:var(--ac)}#pred .note{font-size:12px;color:var(--mut);margin-top:24px}
+
+</style></head><body>
+<nav class="tabs" role="tablist">
+<button role="tab" id="t-loc" aria-selected="true" data-t="loc">Free Class Locator</button>
+<button role="tab" id="t-pred" aria-selected="false" data-t="pred">Attendance Predictor</button>
+</nav>
+<section id="loc"><main>
+<h1>Free Class Locator</h1>
+<p class="sub">Find an empty room, floor by floor, from the 8 EEE-school timetables (Odd Sem 2026-27).</p>
+
+<div class="box">
+  <div class="ai"><input id="q" placeholder='e.g. "I need an AC room on the ground floor for me and my team for the next 2 hours"'><button class="p" id="go">Find rooms</button></div>
+  <div class="chips" id="ex"></div>
+  <div class="interp" id="interp"></div>
+</div>
+
+<h2>Filters</h2>
+<div class="box filters">
+  <label>Day<select id="day"></select></label>
+  <label>Time<input type="time" id="time"></label>
+  <label>Need free for<select id="dur"><option value="0">Any</option><option value="30">30 min</option><option value="60">1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option></select></label>
+  <label>AC<select id="ac"><option value="">Any</option><option value="1">AC</option><option value="0">Non-AC</option></select></label>
+  <label>Floor<select id="fl"><option value="">All</option></select></label>
+  <label>Type<select id="ty"><option value="">Any</option><option>Classroom</option><option>Lab</option></select></label>
+</div>
+
+<h2>Building map</h2>
+<div class="box">
+  <div class="mapbar"><div class="legend"><span><i style="border-color:var(--ok);background:var(--okb)"></i>Free</span><span><i style="border-color:#d98a00;background:rgba(245,158,11,.22)"></i>Free &lt; 30 min</span><span><i style="border-color:var(--no);background:var(--nob)"></i>In use</span><span><i style="border-color:var(--ac)"></i>Claimed by you</span></div><button id="vw">Switch to flat view</button></div>
+  <div class="stage" id="stage"><div class="bld" id="bld"></div></div>
+  <div id="panel" style="border-top:1px solid var(--bd);padding-top:10px;margin-top:6px"></div>
+</div>
+<h2 id="rh">Best matches</h2><div class="grid" id="res"></div>
+<h2>Floor grid</h2><div id="floors"></div>
+<p class="note">Rooms are “busy” only when one of the 8 timetables holds a class there. Blank cells, breaks and lunch count as free. Floors follow room numbers (1xx = Ground, 2xx = 1st …). The dataset has no AC/type info, so those flags in <code>META</code> are placeholders — edit them to match your building. Capacity/team size can’t be checked (no data). The four 2024-25 first-year sheets in the PDF are last year’s, so they’re excluded.</p>
+</main></section>
+<section id="pred" hidden><main>
+<h1>Attendance Predictor</h1>
+<p class="sub">Enter your numbers, then slide the planned leaves and OD to see where you land.</p>
+<div class="box"><div class="f">
+<label>Classes held so far<input id="c" type="number" min="0" value="60"></label>
+<label>Classes attended<input id="a" type="number" min="0" value="50"></label>
+<label>Classes remaining in semester<input id="r" type="number" min="0" value="40"></label>
+<label>Planned leaves (absent)<input id="l" type="number" min="0" value="5"></label>
+<label>Planned OD (counted present)<input id="o" type="number" min="0" value="2"></label>
+</div></div>
+<h2>Where you stand</h2><div class="g" id="cards"></div>
+<h2>Projection by number of leaves</h2><div class="box"><div id="chart"></div></div>
+<h2>Advisor</h2><div class="box"><ul class="adv" id="adv"></ul></div>
+<p class="note">OD periods are treated as present. Check your college's exact rules before relying on these numbers.</p>
+</main></section>
+<script>(()=>{
+const _=0,x=1,G6="CDC 625",TB="TB 106",BD="LAB 108",M="LAB 107",G4="Room 401",S6="IST 602";
+const A="LAB 108,LAB 107",B="LAB 108,LAB 309",C="LAB 309,LAB 107";
+// each day = 9 periods: 0 free, 1 home room, or "room,room"
+const TT=[
+{n:"IV ECE-A",h:"IST 225",d:[[x,_,x,x,_,_,_,_,_],[x,x,x,x,_,_,_,_,_],[x,BD,x,x,_,_,_,_,_],[x,x,x,x,_,_,_,_,_],[x,x,x,x,_,_,_,_,_]]},
+{n:"III ECE-DS",h:"IST 519",d:[[x,x,x,x,_,_,_,_,_],[x,x,x,x,_,A,A,_,_],[x,x,x,x,_,_,_,G6,G6],[x,x,x,x,_,_,_,_,_],[x,x,x,x,_,G6,_,A,A]]},
+{n:"III ECE-B",h:"IST 518",d:[[B,B,_,_,_,x,x,x,x],[G6,G6,_,_,_,x,x,x,x],[G6,_,_,_,_,x,x,x,x],[B,B,_,_,_,x,x,x,x],[_,_,_,_,_,x,x,x,x]]},
+{n:"III ECE-A",h:"IST 518",d:[[x,x,x,x,_,G6,G6,_,_],[x,x,x,x,_,_,G6,_,_],[x,x,x,x,_,_,_,B,B],[x,x,x,x,_,_,_,_,_],[x,x,x,x,_,B,B,_,_]]},
+{n:"III BME",h:"IST 211",d:[[G6,G6,M,M,_,x,x,x,x],[BD,BD,G6,_,_,x,x,x,x],[_,_,_,_,_,x,x,x,x],[_,_,_,BD,_,x,x,x,x],[BD,_,_,_,_,x,x,x,x]]},
+{n:"II ECE-DS B",h:"IST 411",d:[[_,_,C,C,_,x,x,x,x],[C,C,_,_,_,x,x,x,x],[G4,_,_,_,_,x,x,x,x],[G4,G4,TB,TB,_,x,x,x,x],[TB,_,_,_,_,x,x,x,x]]},
+{n:"II ECE-DS A",h:"IST 416",d:[[x,x,x,x,_,S6,S6,C,C],[x,x,x,x,_,S6,_,TB,TB],[x,x,x,x,_,_,TB,_,_],[x,x,x,x,_,C,C,_,_],[x,x,x,x,_,_,_,_,_]]},
+{n:"II BME",h:"IST 602",d:[[x,x,x,x,_,C,C,_,_],[x,x,x,x,_,TB,TB,_,_],[x,x,x,_,_,TB,x,_,_],[x,x,x,x,_,_,_,C,C],[x,x,x,x,_,_,_,x,x]]}
+];
+const META={ // placeholder AC/type flags — edit for your building
+"IST 225":[0,"Classroom"],"IST 211":[0,"Classroom"],"IST 416":[0,"Classroom"],"IST 518":[0,"Classroom"],"IST 519":[1,"Classroom"],"IST 411":[1,"Classroom"],"IST 602":[1,"Classroom"],
+"CDC 625":[1,"Classroom"],"TB 106":[0,"Classroom"],"Room 401":[0,"Classroom"],"LAB 107":[1,"Lab"],"LAB 108":[1,"Lab"],"LAB 309":[1,"Lab"]};
+const P=[[540,590],[590,640],[650,700],[700,750],[750,800],[800,850],[850,900],[910,960],[960,1010]],END=1010,START=540;
+const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday"];
+const occ={};Object.keys(META).forEach(r=>occ[r]=DAYS.map(()=>Array(9).fill(null)));
+TT.forEach(t=>t.d.forEach((row,di)=>row.forEach((v,p)=>{if(!v)return;(v===1?[t.h]:v.split(",")).forEach(r=>{occ[r][di][p]=t.n})})));
+const floorOf=r=>+r.match(/\d/)[0], fname=f=>f===1?"Ground floor (1xx)":(f-1)+ordn(f-1)+" floor ("+f+"xx)";
+function ordn(n){return n==1?"st":n==2?"nd":n==3?"rd":"th"}
+const fmt=m=>{let h=Math.floor(m/60),mm=m%60,s=h>=12?"pm":"am";h=h%12||12;return h+":"+String(mm).padStart(2,"0")+" "+s};
+const dur=m=>{const h=Math.floor(m/60),mm=m%60;return (h?h+"h ":"")+(mm?mm+"m":"")||"0m"};
+function info(r,di,min){ // status of room r at min
+  const s=Math.max(min,START),o=occ[r][di];
+  for(let p=0;p<9;p++){
+    if(o[p]&&P[p][1]>s){
+      if(s>=P[p][0]){let q=p;while(q+1<9&&o[q+1]&&P[q+1][0]-P[q][1]<=10)q++;return{busy:true,by:o[p],until:P[q][1]}}
+      return{busy:false,until:P[p][0],next:o[p],win:P[p][0]-s};
+    }}
+  return{busy:false,until:END,win:Math.max(0,END-s)};
+}
+const $=id=>document.getElementById(id);
+const S={day:0,min:600,sec:0,dur:0,ac:"",fl:"",ty:""};let sel=null,pickTop=false,anchorT=Date.now(),anchorS=0;const claimed={};
+function initState(){
+  const n=new Date();let d=n.getDay()-1,m=n.getHours()*60+n.getMinutes();
+  if(d<0||d>4||m>=END){d=(d<0||d>=4||m<END&&d>4)?0:d+1;if(d>4)d=0;m=START}
+  S.day=d;S.min=Math.max(m,START);S.sec=(m===n.getHours()*60+n.getMinutes()&&d===n.getDay()-1)?n.getSeconds():0;
+}
+function sync(){$("day").value=S.day;$("time").value=String(Math.floor(S.min/60)).padStart(2,"0")+":"+String(S.min%60).padStart(2,"0");$("dur").value=S.dur;$("ac").value=S.ac;$("fl").value=S.fl;$("ty").value=S.ty}
+function card(r,i,showWin){
+  const [ac,ty]=META[r];
+  const st=i.busy?`In use by ${i.by} until ${fmt(i.until)}`:`Free ${showWin?"for "+dur(i.win)+" · ":""}until ${fmt(i.until)}${i.next?" ("+i.next+" next)":""}`;
+  return `<div class="room ${i.busy?"busy":"free"}" data-r="${r}"><div class="n">${r}<span class="tag">${ac?"AC":"Non-AC"}</span><span class="tag">${ty}</span></div><div class="m">${fname(floorOf(r))}</div><div class="st">${st}</div></div>`;
+}
+function render(){
+  anchorT=Date.now();anchorS=S.min*60+S.sec;
+  const all=Object.keys(META).map(r=>({r,i:info(r,S.day,S.min)}));
+  const ok=({r})=>(S.ac===""||META[r][0]==+S.ac)&&(S.fl===""||floorOf(r)==+S.fl)&&(S.ty===""||META[r][1]===S.ty);
+  const m=all.filter(ok).filter(o=>!o.i.busy&&o.i.win>=Math.max(S.dur,1)).sort((a,b)=>b.i.win-a.i.win);
+  $("rh").textContent=`Best matches — ${DAYS[S.day]}, ${fmt(S.min)}`;
+  if(m.length)$("res").innerHTML=m.map(o=>card(o.r,o.i,1)).join("");
+  else{
+    const alt=all.filter(ok).filter(o=>!o.i.busy).sort((a,b)=>b.i.win-a.i.win).slice(0,4);
+    $("res").innerHTML=`<div class="empty" style="grid-column:1/-1">No room matches all of that.${alt.length?" Closest options (shorter window):":" Try relaxing the AC/floor filter."}</div>`+alt.map(o=>card(o.r,o.i,1)).join("");
+  }
+  const fls=[...new Set(Object.keys(META).map(floorOf))].sort();
+  $("floors").innerHTML=fls.map(f=>{
+    const rs=all.filter(o=>floorOf(o.r)==f).filter(ok);if(!rs.length)return"";
+    const nf=rs.filter(o=>!o.i.busy).length;
+    return `<h2>${fname(f)} <span class="tag">${nf}/${rs.length} free</span></h2><div class="grid">${rs.map(o=>card(o.r,o.i,0)).join("")}</div>`}).join("")||'<div class="empty">No rooms match the filters.</div>';
+  if(pickTop&&m.length){sel=m[0].r;pickTop=false}
+  drawMap(all,new Set(m.map(o=>o.r)));drawPanel();
+}
+// ---- Smart text bar: local natural-language parser ----
+const NUM={a:1,an:1,one:1,two:2,three:3,four:4,couple:2};
+function parse(t){
+  t=t.toLowerCase();const o={};
+  if(/non[- ]?ac|without ac|no ac|non[- ]air/.test(t))o.ac="0";else if(/\bac\b|a\/c|air[- ]?condition/.test(t))o.ac="1";
+  if(/ground|\bgf\b/.test(t))o.fl="1";
+  else{let m=t.match(/\b(first|1st|second|2nd|third|3rd|fourth|4th|fifth|5th)\b\s*floor/);
+    if(m)o.fl=String({first:2,"1st":2,second:3,"2nd":3,third:4,"3rd":4,fourth:5,"4th":5,fifth:6,"5th":6}[m[1]]);
+    else if(m=t.match(/floor\s*(\d)/))o.fl=String(+m[1]===0?1:+m[1]+1)}
+  if(/\blabs?\b/.test(t))o.ty="Lab";else if(/class ?room|lecture|seminar|discussion/.test(t))o.ty="Classroom";
+  let m;
+  if(/half an hour|30 ?min/.test(t))o.dur=30;
+  else if(m=t.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h)\b/))o.dur=Math.round(m[1]*60);
+  else if(m=t.match(/(\d+)\s*(minutes?|mins?)/))o.dur=+m[1];
+  else if(m=t.match(/\b(an?|one|two|three|four|couple)(?: of)?\s*(hours?|hrs?)\b/))o.dur=NUM[m[1]]*60;
+  const now=new Date();
+  if(/tomorrow/.test(t))o.day=(((now.getDay()+1)%7)+6)%7;
+  DAYS.forEach((d,i)=>{if(t.includes(d.toLowerCase())||t.includes(d.slice(0,3).toLowerCase()+" "))o.day=i});
+  if(m=t.match(/(?:at|from|after|by|around)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/)){
+    let h=+m[1];const mi=+(m[2]||0);
+    if(m[3]==="pm"&&h<12)h+=12;if(m[3]==="am"&&h===12)h=0;if(!m[3]&&h<8)h+=12;
+    o.min=h*60+mi}
+  return o;
+}
+function ask(text){
+  const o=parse(text);
+  S.ac=o.ac??"";S.fl=o.fl??"";S.ty=o.ty??"";S.dur=o.dur??0;
+  initState();if(o.day!==undefined){S.day=o.day;if(o.min===undefined&&o.day!==undefined&&!(new Date().getDay()-1===o.day))S.min=START}
+  if(o.min!==undefined||o.day!==undefined)S.sec=0;pickTop=true;if(o.min!==undefined)S.min=Math.min(Math.max(o.min,START),END-1);
+  sync();render();
+  const bits=[S.ac===""?"Any AC":S.ac==="1"?"AC":"Non-AC",S.fl===""?"any floor":fname(+S.fl),S.ty||"any room type",S.dur?"free ≥ "+dur(S.dur):"any duration",DAYS[S.day]+" from "+fmt(S.min)];
+  $("interp").innerHTML="Understood: <b>"+bits.join(" · ")+"</b>";
+}
+// ---- wiring ----
+DAYS.forEach((d,i)=>$("day").add(new Option(d,i)));
+[...new Set(Object.keys(META).map(floorOf))].sort().forEach(f=>$("fl").add(new Option(fname(f),f)));
+["day","time","dur","ac","fl","ty"].forEach(id=>$(id).addEventListener("change",()=>{
+  S.day=+$("day").value;const[h,mi]=($("time").value||"09:00").split(":");S.min=Math.min(Math.max(+h*60+ +mi,START),END-1);
+  S.sec=0;S.dur=+$("dur").value;S.ac=$("ac").value;S.fl=$("fl").value;S.ty=$("ty").value;$("interp").textContent="";render()}));
+$("go").onclick=()=>ask($("q").value);
+$("q").addEventListener("keydown",e=>{if(e.key==="Enter")ask($("q").value)});
+["I need an AC room on the ground floor for me and my team for the next 2 hours","non-AC classroom on the 3rd floor for an hour at 2pm","lab free tomorrow at 10am for 90 minutes"].forEach(s=>{
+  const b=document.createElement("button");b.className="chip";b.textContent=s;b.onclick=()=>{$("q").value=s;ask(s)};$("ex").appendChild(b)});
+
+// ---- 3D map, countdown, squad share ----
+const hms=t=>{t=Math.max(0,Math.floor(t));const h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;return [h,m,s].map(v=>String(v).padStart(2,"0")).join(":")};
+function drawMap(all,mset){
+  const hasF=S.ac!==""||S.fl!==""||S.ty!==""||S.dur>0;
+  const fls=[...new Set(all.map(o=>floorOf(o.r)))].sort((a,b)=>b-a);
+  $("bld").innerHTML=fls.map(f=>`<div class="slab" style="--z:${f-1}"><span class="fl">${f===1?"G":f-1}</span>`+all.filter(o=>floorOf(o.r)===f).map(({r,i})=>{
+    const c=["t",i.busy?"busy":i.win<30?"soon":"",claimed[r]?"mine":"",sel===r?"sel":"",hasF&&!mset.has(r)?"dim":""].join(" ");
+    return `<div class="${c}" data-r="${r}"><b>${r}</b>${i.busy?"busy → "+fmt(i.until):"free → "+fmt(i.until)}</div>`}).join("")+"</div>").join("");
+}
+function drawPanel(){
+  const el=$("panel");
+  if(!sel){el.innerHTML='<div class="empty">Tap a room on the map to see its live countdown.</div>';return}
+  const i=info(sel,S.day,S.min),[ac,ty]=META[sel];
+  let h=`<div class="n" style="font-size:18px;font-weight:650">${sel}<span class="tag">${ac?"AC":"Non-AC"}</span><span class="tag">${ty}</span></div><div class="lbl">${fname(floorOf(sel))} · ${DAYS[S.day]}</div>`;
+  h+=`<div class="lbl" style="margin-top:6px">${i.busy?`In use by ${i.by} — free at ${fmt(i.until)}`:i.next?`Next class: ${i.next} at ${fmt(i.until)}`:`No more classes today — free until ${fmt(END)}`}</div><div class="cd" id="cd">--:--:--</div><div class="lbl">${i.busy?"until the room is free":"until the next class starts"}</div>`;
+  if(!i.busy){
+    if(claimed[sel]){
+      const msg=`📍 Heading to ${sel} (${fname(floorOf(sel)).split(" (")[0]}). It's free until ${fmt(i.until).toUpperCase()}. Come fast!`;
+      h+=`<div class="lbl" style="margin-top:8px">✅ You claimed this room.</div><a class="wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">📲 Call the Squad on WhatsApp</a> <button id="unclaim">Release room</button><div class="lbl" style="margin-top:6px">Message: ${msg}</div>`;
+    }else h+=`<button class="p" id="claim" style="margin-top:10px">Claim this room</button>`;
+  }
+  el.innerHTML=h;tick();
+}
+function tick(){
+  const c=$("cd");if(!c||!sel)return;
+  const i=info(sel,S.day,S.min),rem=i.until*60-(anchorS+(Date.now()-anchorT)/1000);
+  if(rem<=0){
+    if(!i.busy&&i.until>=END){c.textContent="Closed";return}
+    S.min=i.until;S.sec=0;render();return}
+  c.textContent=hms(rem);
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-r]");if(t){sel=t.dataset.r;render();if(t.classList.contains("room"))$("panel").scrollIntoView({behavior:"smooth",block:"center"});return}
+  if(e.target.id==="claim"){claimed[sel]=1;render()}
+  if(e.target.id==="unclaim"){delete claimed[sel];render()}
+});
+$("vw").onclick=()=>{const f=$("bld").classList.toggle("flat");$("stage").classList.toggle("flatst",f);$("vw").textContent=f?"Switch to 3D view":"Switch to flat view"};
+if(matchMedia("(max-width:560px)").matches)$("vw").click();
+setInterval(tick,1000);
+initState();sync();render();
+})();</script>
+<script>(()=>{
+const $=id=>document.getElementById(id),n=id=>Math.max(0,Math.floor(+$(id).value)||0);
+const f=x=>x.toFixed(1)+"%";
+function card(t,v,m,ok){return `<div class="k ${ok?"ok":"no"}"><div class="m">${t}</div><div class="n">${v}</div><div class="m">${m}</div></div>`}
+function run(){
+const C=n("c"),A=Math.min(n("a"),C),R=n("r"),L=Math.min(n("l"),R),O=Math.min(n("o"),R-L),T=C+R;
+if(!T){return}
+const cur=C?100*A/C:0,pr=100*(A+R-L)/T;
+const need=t=>Math.ceil(t*T-A-1e-9),miss=t=>R-Math.max(0,need(t));
+const m75=miss(.75),m90=miss(.9);
+const x75=Math.max(0,3*C-4*A),x90=Math.max(0,9*C-10*A);
+$("cards").innerHTML=
+card("Current attendance",f(cur),`${A} of ${C} classes`,cur>=75)+
+card("Projected at semester end",f(pr),`${L} leaves, ${O} OD planned`,pr>=75)+
+card("Leaves left for 75%",m75>=0?m75:"Not reachable",m75>=0?"maximum future absences":"even full attendance falls short",m75>=0)+
+card("Leaves left for 90%",m90>=0?m90:"Not reachable",m90>=0?"maximum future absences":"even full attendance falls short",m90>=0);
+// chart
+const W=600,H=230,p=36,lo=Math.max(0,Math.min(60,Math.floor(100*A/T/10)*10)),y=v=>H-p-(v-lo)/(100-lo)*(H-2*p),x=i=>p+(R?i/R:0)*(W-2*p);
+let pts=[];for(let i=0;i<=R;i++)pts.push(`${x(i).toFixed(1)},${y(100*(A+R-i)/T).toFixed(1)}`);
+let g="";for(let v=lo;v<=100;v+=10)g+=`<line class="ax" x1="${p}" x2="${W-p}" y1="${y(v)}" y2="${y(v)}"/><text class="t" x="4" y="${y(v)+4}">${v}%</text>`;
+$("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Projected attendance versus leaves taken">${g}
+<line class="l75" x1="${p}" x2="${W-p}" y1="${y(75)}" y2="${y(75)}"/><line class="l90" x1="${p}" x2="${W-p}" y1="${y(90)}" y2="${y(90)}"/>
+<polyline class="ln" points="${pts.join(" ")}"/><circle class="dot" r="5" cx="${x(L)}" cy="${y(pr)}"/>
+<text class="t" x="${p}" y="${H-10}">0 leaves</text><text class="t" x="${W-p}" y="${H-10}" text-anchor="end">${R} leaves</text></svg>`;
+// advisor
+const a=[];
+if(cur<75&&C)a.push(`You are below 75% now. Attending the next <b>${x75}</b> classes in a row brings you back to 75%.`);
+else if(C)a.push(`You are above 75% now, with a cushion of <b>${Math.max(0,m75)}</b> future leaves before the limit.`);
+if(cur<90&&C)a.push(`For the 90% target you would need <b>${x90}</b> consecutive classes from today.`);
+if(m75<0)a.push(`75% is out of reach this semester even with perfect attendance. Talk to your coordinator about condonation options.`);
+else if(L>m75)a.push(`<b>Your planned ${L} leaves are too many.</b> You would finish at ${f(pr)}, below 75%. Cut at least ${L-m75} leaves or convert them to OD if eligible.`);
+else a.push(`Your plan is safe for 75%: finishing at <b>${f(pr)}</b> with ${m75-L} spare leaves.`);
+if(m90>=0&&L>m90)a.push(`This plan misses 90% by ${L-m90} leaves.`);
+if(O)a.push(`${O} OD period${O>1?"s":""} counted as present. Get the OD letters approved early so they are recorded.`);
+$("adv").innerHTML=a.map(s=>`<li>${s}</li>`).join("");
+}
+document.querySelectorAll("input").forEach(i=>i.addEventListener("input",run));run();
+})();</script>
+<script>
+(()=>{
+const tabs=document.querySelectorAll(".tabs button");
+function show(t){
+  document.getElementById("loc").hidden=t!=="loc";
+  document.getElementById("pred").hidden=t!=="pred";
+  tabs.forEach(b=>b.setAttribute("aria-selected",b.dataset.t===t));
+  history.replaceState(null,"","#"+(t==="pred"?"attendance":"locator"));
+  window.scrollTo(0,0);
+}
+tabs.forEach(b=>b.addEventListener("click",()=>show(b.dataset.t)));
+show(location.hash==="#attendance"?"pred":"loc");
+})();
+</script>
+</body></html>

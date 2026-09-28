@@ -1,0 +1,4 @@
+# Copy to .env (git-ignored) and fill in real values. Never commit .env.
+# Not needed today: both tools run locally in the browser, no API key required.
+# If you add an AI backend later, keep the key on the server, never in index.html.
+# ANTHROPIC_API_KEY=
